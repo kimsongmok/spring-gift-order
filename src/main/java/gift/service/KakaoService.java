@@ -6,6 +6,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -40,22 +42,40 @@ public class KakaoService {
   }
 
   public String getToken(String code) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-    String body = UriComponentsBuilder.newInstance()
-            .queryParam("grant_type", "authorization_code")
-            .queryParam("client_id", clientId)
-            .queryParam("redirect_uri", redirectUri)
-            .queryParam("code", code)
-            .queryParam("client_secret", clientSecret)
-            .build()
-            .toUriString()
-            .substring(1);
+    HttpHeaders headers = createHeaders();
+    String body = buildRequestBody(code);
 
     HttpEntity<String> request = new HttpEntity<>(body, headers);
     ResponseEntity<String> response = restTemplate.postForEntity(tokenUrl, request, String.class);
 
+    return extractTokenFromResponse(response);
+  }
+
+  private HttpHeaders createHeaders() {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    return headers;
+  }
+
+  private String buildRequestBody(String code) {
+    return UriComponentsBuilder.newInstance()
+            .queryParams(createParamsMap(code))
+            .build()
+            .toUriString()
+            .substring(1);
+  }
+
+  private MultiValueMap<String, String> createParamsMap(String code) {
+    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    params.add("grant_type", "authorization_code");
+    params.add("client_id", clientId);
+    params.add("redirect_uri", redirectUri);
+    params.add("code", code);
+    params.add("client_secret", clientSecret);
+    return params;
+  }
+
+  private String extractTokenFromResponse(ResponseEntity<String> response) {
     return response.getBody();
   }
 }
