@@ -23,8 +23,8 @@ public class RestTemplateTest {
     var body = new LinkedMultiValueMap<String,String>();
     body.add("grant_type", "authorization_code");
     body.add("client_id","3067383950805f02fd78a974d772f63f");
-    body.add("redirect_url","http://localhost:8080");
-    body.add("code","KVUZpoUKDZA7Duh5s-1ZO2J4cbok0NJPFySJvE-GpdIyszrHFa6HSQAAAAQKPXLqAAABkNg_TUnMISgqRbFCUQ");
+    body.add("redirect_url","http://localhost:8081");
+    body.add("code","tibyoj7f4lFp1niLLy3cg_04Y6Uwmzukdm7lpmeGT4PavRd1gXOZfAAAAAQKKcleAAABkOcMyZmm1x-HnlkNwQ");
 
     var request = new RequestEntity<>(body, headers, HttpMethod.POST, URI.create(url));
     var response = client.exchange(request,String.class);
