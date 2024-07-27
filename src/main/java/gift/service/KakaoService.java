@@ -1,33 +1,40 @@
 package gift.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class KakaoService {
 
-  @Value("${kakao.client-id}")
+  @Value("${kakao.auth.url}")
+  private String authUrl;
+
+  @Value("${kakao.token.url}")
+  private String tokenUrl;
+
+  @Value("${kakao.client.id}")
   private String clientId;
 
-  @Value("${kakao.client-secret}")
+  @Value("${kakao.client.secret}")
   private String clientSecret;
 
-  @Value("${kakao.redirect-uri}")
+  @Value("${kakao.redirect.uri}")
   private String redirectUri;
 
-  @Value("${kakao.token-url}")
-  private String tokenUrl;
+  @Value("${kakao.api.url}")
+  private String apiUrl;
 
   private final RestTemplate restTemplate;
 
+  @Autowired
   public KakaoService(RestTemplate restTemplate) {
     this.restTemplate = restTemplate;
   }
@@ -42,40 +49,48 @@ public class KakaoService {
   }
 
   public String getToken(String code) {
-    HttpHeaders headers = createHeaders();
-    String body = buildRequestBody(code);
-
-    HttpEntity<String> request = new HttpEntity<>(body, headers);
-    ResponseEntity<String> response = restTemplate.postForEntity(tokenUrl, request, String.class);
-
-    return extractTokenFromResponse(response);
-  }
-
-  private HttpHeaders createHeaders() {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-    return headers;
-  }
 
-  private String buildRequestBody(String code) {
-    return UriComponentsBuilder.newInstance()
-            .queryParams(createParamsMap(code))
-            .build()
-            .toUriString()
-            .substring(1);
-  }
-
-  private MultiValueMap<String, String> createParamsMap(String code) {
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("grant_type", "authorization_code");
     params.add("client_id", clientId);
     params.add("redirect_uri", redirectUri);
     params.add("code", code);
     params.add("client_secret", clientSecret);
-    return params;
+
+    HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+
+    try {
+      ResponseEntity<String> response = restTemplate.postForEntity(tokenUrl, request, String.class);
+      return response.getBody();
+    } catch (HttpClientErrorException e) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized: Invalid or expired authorization code");
+    }
   }
 
-  private String extractTokenFromResponse(ResponseEntity<String> response) {
-    return response.getBody();
+  public void sendMessage(String message, String accessToken) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    headers.setBearerAuth(accessToken);
+
+    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    params.add("template_object", createTemplateObject(message));
+
+    HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+
+    try {
+      restTemplate.postForEntity(apiUrl, request, String.class);
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized: Invalid or expired access token");
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  private String createTemplateObject(String message) {
+    return "{\"object_type\":\"text\",\"text\":\"" + message + "\",\"link\":{\"web_url\":\"http://example.com\"}}";
   }
 }
