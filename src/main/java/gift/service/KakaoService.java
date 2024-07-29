@@ -82,11 +82,15 @@ public class KakaoService {
     try {
       restTemplate.postForEntity(apiUrl, request, String.class);
     } catch (HttpClientErrorException e) {
-      if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized: Invalid or expired access token");
-      } else {
-        throw e;
-      }
+      handleException(e);
+    }
+  }
+
+  private void handleException(HttpClientErrorException e) {
+    if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized: Invalid or expired access token");
+    } else {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send message", e);
     }
   }
 

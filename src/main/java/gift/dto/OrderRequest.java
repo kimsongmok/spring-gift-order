@@ -1,21 +1,21 @@
 package gift.dto;
 
 public class OrderRequest {
-  private final Long optionId;
-  private final Integer quantity;
+  private final long optionId;
+  private final int quantity;
   private final String message;
 
-  public OrderRequest(Long optionId, Integer quantity, String message) {
+  public OrderRequest(long optionId, int quantity, String message) {
     this.optionId = optionId;
     this.quantity = quantity;
     this.message = message;
   }
 
-  public Long getOptionId() {
+  public long getOptionId() {
     return optionId;
   }
 
-  public Integer getQuantity() {
+  public int getQuantity() {
     return quantity;
   }
 
