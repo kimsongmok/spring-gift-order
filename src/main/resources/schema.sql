@@ -30,9 +30,10 @@ CREATE TABLE IF NOT EXISTS member (
 
 -- Create the wishlist table if not exists
 CREATE TABLE IF NOT EXISTS wishlist (
-                                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                        member_id BIGINT NOT NULL,
-                                        product_id BIGINT NOT NULL,
-                                        FOREIGN KEY (member_id) REFERENCES member(id),
-                                        FOREIGN KEY (product_id) REFERENCES product(id)
+                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                          option_id BIGINT NOT NULL,
+                          member_id BIGINT NOT NULL,
+                          product_id BIGINT NOT NULL,
+                          FOREIGN KEY (member_id) REFERENCES member(id),
+                          FOREIGN KEY (product_id) REFERENCES product(id)
 );

@@ -9,6 +9,9 @@ public class Wishlist {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column(name = "option_id", nullable = false)
+  private Long optionId;
+
   @ManyToOne
   @JoinColumn(name = "member_id", nullable = false)
   private Member member;
@@ -23,6 +26,10 @@ public class Wishlist {
 
   public void setId(Long id) {
     this.id = id;
+  }
+
+  public Long getOptionId() {
+    return optionId;
   }
 
   public Member getMember() {
